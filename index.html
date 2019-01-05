@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <link rel="stylesheet" href="http://at.alicdn.com/t/font_993825_jyjwfm3gem.css">
+  <meta charset="utf-8">
+  <title>sinanews</title>
+  <style>
+    *{
+  margin:0;
+  padding:0;
+  box-sizing:boder-box;
+  list-style:none;
+}
+.init{
+  display:none;
+}
+.wrap{
+  margin:0 auto;
+}
+.ct-waterfall{
+  position:relative;
+  max-width:800px;
+  margin:0 auto;
+}
+.ct-waterfall ul{
+  position:absolute;
+}
+.ct{
+  margin:10px;
+  width:200px;
+  padding:10px;
+  border:1px solid #b1b0b1;
+  box-shadow:1px 2px 0 rgba(0,0,0,0.3)
+}
+.ct .cover{
+  width:100%;
+  padding-bottom:8px;
+  border-bottom:1px solid #b1b0b1;
+}
+.ct img{
+  width:100%;
+}
+.ct .header{
+  padding:3px;
+}
+.ct .contents{
+  font-size:14px;
+  color:#969496;
+}
+  </style>
+</head>
+<body>
+ <div class="wrap">
+  <div class="ct-waterfall">
+    <ul id="pic-ct" class="ct init clearfix">
+      <li class="cover">
+        <a href="#"><img src="https://placekitten.com/120/150" alt=""></a>
+      </li>
+      <li class="header">
+        <h4>标题付电话费了沙发</h4>
+      </li>
+      <li class="contents"><p>内容机等级深度来技术见识到了看风景使得反倒是蒋介石；</p></li>
+    </ul>
+  </div>
+  <div class="loaded"><i class="iconfont icon-loading1"></i></div>
+  </div>
+
+<script>
+   var curPage = 1
+var perPageCount = 10
+var colHeightArray = []
+var colWidth = $('ul').outerWidth(true)
+// var colwidth = $('.ct')
+var colNumber = Math.floor($('.ct-waterfall').width()/colWidth) 
+var isDataArrived = true
+for(var i = 0;i < colNumber;i++){
+  colHeightArray[i] = 0
+}
+
+// console.log(colHeightArray)
+
+
+// function start(){
+//   getData(function(newsList){
+    
+//   })
+// }
+
+getData()
+
+$(window).scroll(function(){
+//   if(isDataArrived) return
+//   console.log('jixu')
+//   console.log($('.loaded').offset().top)
+  if(clock){
+    clearTimeout(clock)
+  }
+  var clock = setTimeout(function(){
+    if(!isDataArrived) return 
+    
+    if( isToBottom($('.loaded')) ) {
+      getData()
+    }
+  },500)  
+})
+
+function getData(callback){
+  $.ajax({
+    url:'http://platform.sina.com.cn/slide/album_tech',
+    dataType:'jsonp',
+    jsonp:'jsoncallback',
+    data:{
+      app_key:'1271687855',
+      num:perPageCount,
+      page:curPage
+    }
+  }).done(function(ret){
+//     console.log(ret)
+          if(ret && ret.status && ret.status.code === '0'){
+            place(ret.data);
+            curPage++
+            console.log(curPage)
+            
+          }else{
+            console.log('get data error');
+          }
+          });
+  isDataArrived = false
+}
+
+
+
+
+// var data = getData()
+// console.log(data)
+// $(data).each(function(){
+//   var $tpl = getNode(this)
+//   $('#pic-ct').append($tpl)
+// })
+
+function getNode(item){
+  var tpl = '<ul id="pic-ct" class="ct clearfix">'
+  tpl += ''
+  tpl +=' <li class="cover">'
+  tpl += ' <a href="' + item.url + '"><img src="' + item.img_url + '" alt=""></a></li><li class="header"><h4>'
+  tpl += item.short_name + '</h4></li><li class="contents"><p>'
+  tpl +=item.name + '</p></li>' 
+  tpl +='</ul>'
+  return $(tpl)
+}
+
+
+function place(nodelist){
+//   console.log(nodelist)
+  isDataArrived = true
+  $(nodelist).each(function(){
+     var $node = getNode(this) 
+     $node.find('img').load(function(){
+        $('.ct-waterfall').append($node)
+        waterfall($node)
+        })  
+  })
+}
+
+
+function waterfall($nodes){
+//   $nodes.each(function(){
+//     var $cur = $(this)
+    var minindex = 0
+    mincolHeight = colHeightArray[0]
+    for(var i = 0;i < colNumber;i++){
+      if(colHeightArray[i] < mincolHeight){
+        mincolHeight = colHeightArray[i]
+        minindex = i
+      } 
+//       console.log(minindex)
+    }
+  $nodes.css({
+        left:minindex*colWidth,
+        top:mincolHeight
+      })
+  colHeightArray[minindex] += $nodes.outerHeight(true)
+  $('.ct-waterfall').height(Math.max.apply(null,colHeightArray))
+//   console.log($('.ct-waterfall').height())
+}
+
+function isToBottom($node){
+  return $(window).scrollTop() + $(window).height() >= $node.offset().top
+}
+
+</script>
+</body>
+</html>
